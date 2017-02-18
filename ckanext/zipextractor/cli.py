@@ -1,8 +1,6 @@
 # encoding: utf-8
 import sys
 
-import psycopg2
-import requests
 from ckan import model
 from ckan.lib import cli
 from ckan.plugins import toolkit

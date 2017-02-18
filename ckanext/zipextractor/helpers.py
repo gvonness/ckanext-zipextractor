@@ -37,9 +37,11 @@ def get_microservice_metadata():
             raise Exception(
                 'Config option `{0}` must be set to use the Zip Extractor.'.format(config_option))
 
-    return {'max_zip_resource_filesize': human2bytes(config.get('ckan.zipextractor.max_zip_resource_filesize', '100MB')),
-            'target_zip_formats': list(set([x.upper() for x in toolkit.aslist(config.get('ckan.zipextractor.target_formats', []))]))
-            }
+    return {
+        'max_zip_resource_filesize': human2bytes(config.get('ckan.zipextractor.max_zip_resource_filesize', '100MB')),
+        'target_zip_formats': list(
+            set([x.upper() for x in toolkit.aslist(config.get('ckan.zipextractor.target_formats', []))]))
+        }
 
 
 def is_resource_blacklisted(resource):

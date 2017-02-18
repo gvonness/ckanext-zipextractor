@@ -292,6 +292,3 @@ def delete_orphaned_resources(context, pkg_dict):
                 deleted_ids.add(res_id)
 
     return deleted_ids
-
-
-

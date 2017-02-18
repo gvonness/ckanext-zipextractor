@@ -42,7 +42,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                         package_dict['resource_ids_to_delete'] = [entity.id]
                         toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
                 elif (is_zip_parent and (operation == d_type.changed or not operation)) or (
-                        operation == d_type.new and auto_extract):
+                                operation == d_type.new and auto_extract):
                     helpers.log.error(">>>>>>> Registered Ingest Trigger")
                     toolkit.get_action('zipextractor_extract_resource')({}, resource_dict)
 
