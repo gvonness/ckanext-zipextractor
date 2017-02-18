@@ -14,6 +14,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IResourceUrlChange)
+    plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IDomainObjectModification, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IRoutes, inherit=True)
@@ -30,20 +31,23 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
             resource_dict = model.Resource.get(entity.id).as_dict()
             if helpers.is_zip_extractable_resource(resource_dict):
                 d_type = model.domain_object.DomainObjectOperation
-                auto_extract = toolkit.asbool(config.get('ckan.zipextractor.auto_extract', 'False'))
-                is_zip_parent = toolkit.asbool(resource_dict.get('zip_parent', 'False'))
-                marked_to_extract = toolkit.asbool(resource_dict.get('zip_extract', 'False'))
                 if operation == d_type.deleted or entity.state == 'deleted':
-
                     package_dict = model.Package.get(resource_dict['package_id']).as_dict()
                     if package_dict['state'] != 'deleted':
                         helpers.log.error(">>>>>>> Registered Orphan Delete Trigger")
                         package_dict['resource_ids_to_delete'] = [entity.id]
                         toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
-                elif (is_zip_parent and (operation == d_type.changed or not operation)) or (
-                                operation == d_type.new and (auto_extract or marked_to_extract)):
-                    helpers.log.error(">>>>>>> Registered Ingest Trigger")
-                    toolkit.get_action('zipextractor_extract_resource')({}, resource_dict)
+
+    def after_create(self, context, resource):
+        if helpers.is_zip_extractable_resource(resource):
+            auto_extract = toolkit.asbool(config.get('ckan.zipextractor.auto_extract', 'False'))
+            marked_to_extract = toolkit.asbool(resource.get('zip_extract', 'False'))
+            if auto_extract or marked_to_extract:
+                toolkit.get_action('zipextractor_extract_resource')(context, resource)
+
+    def after_update(self, context, resource):
+        if toolkit.asbool(resource.get('zip_parent', 'False')):
+            toolkit.get_action('zipextractor_extract_resource')(context, resource)
 
     def before_map(self, m):
         m.connect(
