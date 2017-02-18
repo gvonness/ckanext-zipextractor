@@ -1,0 +1,7 @@
+{% ckan_extends %}
+{% block content_primary_nav %}
+{{ super() }}
+{% if 'zipextractor' in g.plugins and h.zipextractor_is_zip_extractable_resource(res) %}
+{{ h.build_nav_icon('resource_zipextract', _('Zip Extract'), resource_id=res.id) }}
+{% endif %}
+{% endblock %}
