@@ -32,6 +32,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                 d_type = model.domain_object.DomainObjectOperation
                 auto_extract = toolkit.asbool(config.get('ckan.zipextractor.auto_extract', 'False'))
                 is_zip_parent = toolkit.asbool(resource_dict.get('zip_parent', 'False'))
+                marked_to_extract = toolkit.asbool(resource_dict.get('zip_extract', 'False'))
                 if operation == d_type.deleted or entity.state == 'deleted':
 
                     package_dict = model.Package.get(resource_dict['package_id']).as_dict()
@@ -40,7 +41,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                         package_dict['resource_ids_to_delete'] = [entity.id]
                         toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
                 elif (is_zip_parent and (operation == d_type.changed or not operation)) or (
-                                operation == d_type.new and auto_extract):
+                                operation == d_type.new and (auto_extract or marked_to_extract)):
                     helpers.log.error(">>>>>>> Registered Ingest Trigger")
                     toolkit.get_action('zipextractor_extract_resource')({}, resource_dict)
 
