@@ -49,7 +49,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
     def before_map(self, m):
         m.connect(
             'resource_zipextract', '/resource_zipextract/{resource_id}',
-            controller='ckanext.zipextractor.plugin:ResourceSpatialController',
+            controller='ckanext.zipextractor.plugin:ResourceZipController',
             action='resource_zipextract', ckan_icon='cloud-upload')
         return m
 
