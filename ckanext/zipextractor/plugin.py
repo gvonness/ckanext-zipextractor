@@ -69,7 +69,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                 'zipextractor_is_zip_extractable_resource': helpers.is_zip_extractable_resource}
 
 
-class ResourceSpatialController(base.BaseController):
+class ResourceZipController(base.BaseController):
     def resource_zipextract(self, resource_id):
         if toolkit.request.method == 'POST':
             try:
@@ -79,7 +79,7 @@ class ResourceSpatialController(base.BaseController):
                 pass
 
             base.redirect(core_helpers.url_for(
-                controller='ckanext.zipextractor.plugin:ResourceSpatialController',
+                controller='ckanext.zipextractor.plugin:ResourceZipController',
                 action='resource_zipextract',
                 resource_id=resource_id)
             )
