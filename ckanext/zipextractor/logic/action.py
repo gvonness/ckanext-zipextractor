@@ -290,7 +290,7 @@ def delete_orphaned_resources(context, pkg_dict):
     for res_id in pkg_dict['resource_ids_to_delete']:
         for res in pkg_dict['resources']:
             if res.get('zip_child_of', '') == res_id and res['id'] not in deleted_ids:
-                if toolkit.asbool(res.get('zip_parent'), 'False'):
+                if toolkit.asbool(res.get('zip_parent', 'False')):
                     new_dict = pkg_dict
                     new_dict['resource_ids_to_delete'] = [res_id]
                     new_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in deleted_ids]
