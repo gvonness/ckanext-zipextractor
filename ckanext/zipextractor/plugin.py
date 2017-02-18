@@ -33,8 +33,6 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                 auto_extract = toolkit.asbool(config.get('ckan.zipextractor.auto_extract', 'False'))
                 is_zip_parent = toolkit.asbool(resource_dict.get('zip_parent', 'False'))
                 if operation == d_type.deleted or entity.state == 'deleted':
-                    helpers.log.error(">>>>>>> Registered Purge Trigger")
-                    toolkit.get_action('zipextractor_purge_resource_datastores')({}, resource_dict)
 
                     package_dict = model.Package.get(resource_dict['package_id']).as_dict()
                     if package_dict['state'] != 'deleted':
