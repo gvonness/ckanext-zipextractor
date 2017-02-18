@@ -63,6 +63,14 @@ def zipextractor_job_submit(context, data_dict):
     toolkit.get_action('task_status_update')(context, task)
 
     try:
+        # Delete out existing children
+        model = context['model']
+        resource_dict = model.Resource.get(res_id).as_dict()
+        package_dict = model.Package.get(resource_dict['package_id']).as_dict()
+        package_dict['resource_ids_to_delete'] = [res_id]
+
+        delete_orphaned_resources(context, package_dict)
+
         metadata_package = get_microservice_metadata()
         metadata_package['resource_id'] = res_id
         metadata_package['ckan_url'] = site_url
