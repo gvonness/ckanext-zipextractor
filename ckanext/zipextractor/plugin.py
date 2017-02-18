@@ -58,7 +58,6 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                 'zipextractor_hook': action.zipextractor_hook,
                 'zipextractor_status': action.zipextractor_status,
                 'zipextractor_extract_resource': action.extract_resource,
-                'zipextractor_purge_resource_datastores': action.purge_resource_datastores,
                 'zipextractor_delete_orphaned_resources': action.delete_orphaned_resources}
 
     def get_auth_functions(self):
