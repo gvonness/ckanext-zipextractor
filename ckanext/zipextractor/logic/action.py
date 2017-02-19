@@ -289,7 +289,7 @@ def delete_orphaned_resources(context, pkg_dict):
     session = model.Session
     deleted_ids = set()
 
-    is_initial_call = not toolkit.asbool(pkg_dict.get('recursion_dict'), 'False')
+    is_initial_call = not toolkit.asbool(pkg_dict.get('recursion_dict', 'False'))
     tested_ids = set(pkg_dict['resource_ids_to_delete']) | set(pkg_dict.get('ids_already_tested', []))
     for res_id in pkg_dict['resource_ids_to_delete']:
         for res in pkg_dict['resources']:
