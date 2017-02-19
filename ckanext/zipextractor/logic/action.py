@@ -69,7 +69,7 @@ def zipextractor_job_submit(context, data_dict):
         resource_dict = model.Resource.get(res_id).as_dict()
         package_dict = model.Package.get(resource_dict['package_id']).as_dict()
         package_dict['resource_ids_to_delete'] = [res_id]
-        package_dict['recursion_dict'] = True
+        #package_dict['recursion_dict'] = True
 
         delete_orphaned_resources(context, package_dict)
 
@@ -290,7 +290,7 @@ def delete_orphaned_resources(context, pkg_dict):
     session = model.Session
     deleted_ids = set()
 
-    is_initial_call = not toolkit.asbool(pkg_dict.get('recursion_dict', 'False'))
+    #is_initial_call = not toolkit.asbool(pkg_dict.get('recursion_dict', 'False'))
     tested_ids = set(pkg_dict['resource_ids_to_delete']) | set(pkg_dict.get('ids_already_tested', []))
     for res_id in pkg_dict['resource_ids_to_delete']:
         for res in pkg_dict['resources']:
@@ -311,14 +311,14 @@ def delete_orphaned_resources(context, pkg_dict):
                 session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
                 deleted_ids.add(res['id'])
 
-    if is_initial_call:
-        for res_id in pkg_dict['resource_ids_to_delete']:
-            log.error(">>> Deleting {0}".format(res['name']))
-            del_dict = dict(state='deleted')
-            session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
-            deleted_ids.add(res_id)
-    if deleted_ids != set():
-        pass
+    #if is_initial_call:
+    #    for res_id in pkg_dict['resource_ids_to_delete']:
+    #        log.error(">>> Deleting {0}".format(res['name']))
+    #        del_dict = dict(state='deleted')
+    #        session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
+    #        deleted_ids.add(res_id)
+    #if deleted_ids != set():
+        #pass
         #model.repo.commit()
         #search.rebuild(pkg_dict['id'])
 

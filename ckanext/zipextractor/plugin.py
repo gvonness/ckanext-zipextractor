@@ -50,6 +50,16 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
         if toolkit.asbool(resource.get('zip_parent', 'False')):
             toolkit.get_action('zipextractor_extract_resource')(context, resource)
 
+    def before_delete(self, context, res_to_delete, resources):
+        remaining_resources = [r for r in resources if r['id'] != res_to_delete['id']]
+        if remaining_resources:
+            package_dict = model.Package.get(remaining_resources[0]['package_id']).as_dict()
+            if package_dict['state'] != 'deleted':
+                package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if 'spatial_child_of' in r and r['spatial_child_of'] == res_to_delete['id']]
+                helpers.log.error("Found orphaned children: {0}".format(package_dict['resource_ids_to_delete']))
+                if package_dict['resource_ids_to_delete']:
+                    toolkit.get_action('zipextractor_delete_orphaned_resources')(context, package_dict)
+
     def after_delete(self, context, remaining_resources):
         if remaining_resources:
             package_dict = model.Package.get(remaining_resources[0]['package_id']).as_dict()
