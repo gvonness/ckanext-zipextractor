@@ -309,7 +309,7 @@ def delete_orphaned_resources(context, pkg_dict):
                 session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
                 deleted_ids.add(res['id'])
 
-    if is_initial_call:
+    if is_initial_call and deleted_ids != set():
         session.commit()
         search.rebuild(pkg_dict['id'])
 
