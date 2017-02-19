@@ -310,7 +310,7 @@ def delete_orphaned_resources(context, pkg_dict):
                 deleted_ids.add(res['id'])
 
     if is_initial_call and deleted_ids != set():
-        session.commit()
-        #search.rebuild(pkg_dict['id'])
+        model.repo.commit()
+        search.rebuild(pkg_dict['id'])
 
     return deleted_ids, tested_ids
