@@ -34,7 +34,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                 if operation == d_type.deleted or entity.state == 'deleted':
                     package_dict = model.Package.get(resource_dict['package_id']).as_dict()
                     if package_dict['state'] != 'deleted':
-                        helpers.log.error(">>>>>>> Registered Orphan Delete Trigger")
+                        helpers.log.error(">>>>>>> Registered Orphan Delete Trigger for res {0}".format(entity.id))
                         package_dict['resource_ids_to_delete'] = [entity.id]
                         toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
 
