@@ -293,7 +293,7 @@ def delete_orphaned_resources(context, pkg_dict):
     tested_ids = set(pkg_dict['resource_ids_to_delete']) | set(pkg_dict.get('ids_already_tested', []))
     for res_id in pkg_dict['resource_ids_to_delete']:
         for res in pkg_dict['resources']:
-            if (res.get('zip_child_of', '') == res_id or is_initial_call) and res['id'] not in deleted_ids:
+            if res.get('zip_child_of', '') == res_id and res['id'] not in deleted_ids:
                 if toolkit.asbool(res.get('zip_parent', 'False')) and res['id'] not in tested_ids:
                     tested_ids.add(res['id'])
                     new_dict = pkg_dict
@@ -310,7 +310,13 @@ def delete_orphaned_resources(context, pkg_dict):
                 session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
                 deleted_ids.add(res['id'])
 
-    if is_initial_call and deleted_ids != set():
+    if is_initial_call:
+        for res_id in pkg_dict['resource_ids_to_delete']:
+            log.error(">>> Deleting {0}".format(res['name']))
+            del_dict = dict(state='deleted')
+            session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
+            deleted_ids.add(res_id)
+    if deleted_ids != set():
         search.rebuild(pkg_dict['id'])
 
     return deleted_ids, tested_ids
