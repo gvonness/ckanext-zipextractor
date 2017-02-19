@@ -34,9 +34,10 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                 if operation == d_type.deleted or entity.state == 'deleted':
                     package_dict = model.Package.get(resource_dict['package_id']).as_dict()
                     if package_dict['state'] != 'deleted':
-                        helpers.log.error(">>>>>>> Registered Orphan Delete Trigger for res {0}".format(entity.id))
-                        package_dict['resource_ids_to_delete'] = [entity.id]
-                        toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
+                        pass
+                        #helpers.log.error(">>>>>>> Registered Orphan Delete Trigger for res {0}".format(entity.id))
+                        #package_dict['resource_ids_to_delete'] = [entity.id]
+                        #toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
 
     def after_create(self, context, resource):
         if helpers.is_zip_extractable_resource(resource):
@@ -48,6 +49,15 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
     def after_update(self, context, resource):
         if toolkit.asbool(resource.get('zip_parent', 'False')):
             toolkit.get_action('zipextractor_extract_resource')(context, resource)
+
+    def after_delete(self, remaining_resources):
+        if remaining_resources:
+            package_dict = model.Package.get(remaining_resources[0]['package_id']).as_dict()
+            if package_dict['state'] != 'deleted':
+                remaining_ids = [r['id'] for r in remaining_resources]
+                package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if 'spatial_child_of' in r and r['spatial_child_of'] not in remaining_ids]
+                if package_dict['resource_ids_to_delete']:
+                    toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
 
     def before_map(self, m):
         m.connect(
