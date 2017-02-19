@@ -318,6 +318,7 @@ def delete_orphaned_resources(context, pkg_dict):
             session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
             deleted_ids.add(res_id)
     if deleted_ids != set():
+        model.repo.commit()
         search.rebuild(pkg_dict['id'])
 
     return deleted_ids, tested_ids
