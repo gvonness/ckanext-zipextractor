@@ -287,16 +287,22 @@ def delete_orphaned_resources(context, pkg_dict):
     model = context['model']
     deleted_ids = set()
 
+    tested_ids = set(pkg_dict['resource_ids_to_delete']) | set(pkg_dict.get('ids_already_tested', []))
     for res_id in pkg_dict['resource_ids_to_delete']:
         for res in pkg_dict['resources']:
             if res.get('zip_child_of', '') == res_id and res['id'] not in deleted_ids:
-                if toolkit.asbool(res.get('zip_parent', 'False')):
+                if toolkit.asbool(res.get('zip_parent', 'False')) and res['id'] not in tested_ids:
+                    tested_ids.add(res['id'])
                     new_dict = pkg_dict
-                    new_dict['resource_ids_to_delete'] = [res_id]
+                    new_dict['resource_ids_to_delete'] = [res['id']]
+                    new_dict['ids_already_tested'] = list(tested_ids)
                     new_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in deleted_ids]
-                    deleted_ids.union(delete_orphaned_resources(context, new_dict))
+
+                    new_deleted_ids, new_tested_ids = delete_orphaned_resources(context, new_dict)
+                    deleted_ids |= new_deleted_ids
+                    tested_ids |= tested_ids
                 del_dict = dict(state='deleted')
                 model.Session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
-                deleted_ids.add(res_id)
+                deleted_ids.add(res['id'])
 
-    return deleted_ids
+    return (deleted_ids, tested_ids)
