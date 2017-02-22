@@ -40,6 +40,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
                         package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if
                                                                   'zip_child_of' in r and r['zip_child_of'] not in [
                                                                       x['id'] for x in remaining_resources]]
+                        helpers.log.error(">>>>>> Found the following orphans to delete: {0}".format(remaining_resources))
                         toolkit.get_action('zipextractor_delete_orphaned_resources')({'ignore_auth': True}, package_dict)
                 elif (is_zip_parent and (operation == d_type.changed or not operation)) or (
                         operation == d_type.new and auto_ingest):
