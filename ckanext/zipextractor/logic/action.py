@@ -290,17 +290,14 @@ def delete_orphaned_resources(context, pkg_dict):
     session = model.Session
     deleted_ids = set()
 
-    #is_initial_call = not toolkit.asbool(pkg_dict.get('recursion_dict', 'False'))
-    tested_ids = set(pkg_dict['resource_ids_to_delete']) | set(pkg_dict.get('ids_already_tested', []))
+    tested_ids = set(pkg_dict.get('ids_already_tested', []))
     pkg_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in pkg_dict['resource_ids_to_delete']]
     for res_id in pkg_dict['resource_ids_to_delete']:
-        for res in pkg_dict['resources']:
+        for res in [r for r in pkg_dict['resources'] if res['id'] not in tested_ids]:
             if res.get('zip_child_of', '') == res_id and res['id'] not in deleted_ids:
-                if toolkit.asbool(res.get('zip_parent', 'False')) and res['id'] not in tested_ids:
-                    tested_ids.add(res['id'])
+                if toolkit.asbool(res.get('zip_parent', 'False')):
                     new_dict = pkg_dict
                     new_dict['resource_ids_to_delete'] = [res['id']]
-                    new_dict['recursion_dict'] = True
                     new_dict['ids_already_tested'] = list(tested_ids)
                     new_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in deleted_ids]
 
@@ -312,22 +309,11 @@ def delete_orphaned_resources(context, pkg_dict):
                     del_dict = dict(state='deleted')
                     session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
                     deleted_ids.add(res['id'])
-                    tested_ids.add(res['id'])
+            tested_ids.add(res['id'])
         log.error(">>> Deleting {0}".format(res_id))
         del_dict = dict(state='deleted')
         session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
         deleted_ids.add(res_id)
         tested_ids.add(res_id)
-
-    #if is_initial_call:
-    #    for res_id in pkg_dict['resource_ids_to_delete']:
-    #        log.error(">>> Deleting {0}".format(res['name']))
-    #        del_dict = dict(state='deleted')
-    #        session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
-    #        deleted_ids.add(res_id)
-    #if deleted_ids != set():
-        #pass
-        #model.repo.commit()
-        #search.rebuild(pkg_dict['id'])
 
     return deleted_ids, tested_ids
