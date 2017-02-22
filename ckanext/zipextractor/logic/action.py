@@ -313,7 +313,7 @@ def delete_orphaned_resources(context, pkg_dict):
                     session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
                     deleted_ids.add(res['id'])
                     tested_ids.add(res['id'])
-        log.error(">>> Deleting {0}".format(res['name']))
+        log.error(">>> Deleting {0}".format(res_id))
         del_dict = dict(state='deleted')
         session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
         deleted_ids.add(res_id)
