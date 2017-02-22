@@ -14,7 +14,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(plugins.IResourceUrlChange)
-    plugins.implements(plugins.IResourceController, inherit=True)
+    #plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IDomainObjectModification, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
     plugins.implements(plugins.IRoutes, inherit=True)
@@ -31,37 +31,43 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
             resource_dict = model.Resource.get(entity.id).as_dict()
             if helpers.is_zip_extractable_resource(resource_dict):
                 d_type = model.domain_object.DomainObjectOperation
+                auto_ingest = toolkit.asbool(config.get('ckan.zipextractor.auto_ingest', 'False'))
+                is_zip_parent = toolkit.asbool(resource_dict.get('zip_parent', 'False'))
                 if operation == d_type.deleted or entity.state == 'deleted':
                     package_dict = model.Package.get(resource_dict['package_id']).as_dict()
                     if package_dict['state'] != 'deleted':
-                        pass
-                        #helpers.log.error(">>>>>>> Registered Orphan Delete Trigger for res {0}".format(entity.id))
-                        #package_dict['resource_ids_to_delete'] = [entity.id]
-                        #toolkit.get_action('zipextractor_delete_orphaned_resources')({}, package_dict)
+                        remaining_resources = [r['id'] for r in package_dict['resources'] if r['id'] != entity.id]
+                        package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if
+                                                                  'zip_child_of' in r and r['zip_child_of'] not in [
+                                                                      x['id'] for x in remaining_resources]]
+                        toolkit.get_action('zipextractor_delete_orphaned_resources')({'ignore_auth': True}, package_dict)
+                elif (is_zip_parent and (operation == d_type.changed or not operation)) or (
+                        operation == d_type.new and auto_ingest):
+                    toolkit.get_action('zipextractor_extract_resource')({}, resource_dict)
 
-    def after_create(self, context, resource):
-        if helpers.is_zip_extractable_resource(resource):
-            auto_extract = toolkit.asbool(config.get('ckan.zipextractor.auto_extract', 'False'))
-            marked_to_extract = toolkit.asbool(resource.get('zip_extract', 'False'))
-            if auto_extract or marked_to_extract:
-                toolkit.get_action('zipextractor_extract_resource')(context, resource)
+    #def after_create(self, context, resource):
+    #    if helpers.is_zip_extractable_resource(resource):
+    #        auto_extract = toolkit.asbool(config.get('ckan.zipextractor.auto_extract', 'False'))
+    #        marked_to_extract = toolkit.asbool(resource.get('zip_extract', 'False'))
+    #        if auto_extract or marked_to_extract:
+    #            toolkit.get_action('zipextractor_extract_resource')(context, resource)
 
-    def after_update(self, context, resource):
-        if toolkit.asbool(resource.get('zip_parent', 'False')):
-            toolkit.get_action('zipextractor_extract_resource')(context, resource)
+    #def after_update(self, context, resource):
+    #    if toolkit.asbool(resource.get('zip_parent', 'False')):
+    #        toolkit.get_action('zipextractor_extract_resource')(context, resource)
 
-    def before_delete(self, context, res_to_delete, resources):
-        remaining_resources = [r for r in resources if r['id'] != res_to_delete['id']]
-        if remaining_resources:
-            helpers.log.debug(">>>>>>> Checking for orphans - Package Check")
-            package_dict = model.Package.get(remaining_resources[0]['package_id']).as_dict()
-            if package_dict['state'] != 'deleted':
-                helpers.log.error(">>>>>>> Checking for orphans - Package Found - Building resources to delete")
-                package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if 'zip_child_of' in r and r['zip_child_of'] not in [x['id'] for x in remaining_resources]]
-                helpers.log.error("Found orphaned children: {0}".format(package_dict['resource_ids_to_delete']))
-                helpers.log.debug("Pkg_dict: {0}".format(package_dict))
-                if package_dict['resource_ids_to_delete']:
-                    toolkit.get_action('zipextractor_delete_orphaned_resources')(context, package_dict)
+    #def before_delete(self, context, res_to_delete, resources):
+    #    remaining_resources = [r for r in resources if r['id'] != res_to_delete['id']]
+    #    if remaining_resources:
+    #        helpers.log.debug(">>>>>>> Checking for orphans - Package Check")
+    #        package_dict = model.Package.get(remaining_resources[0]['package_id']).as_dict()
+    #        if package_dict['state'] != 'deleted':
+    #            helpers.log.error(">>>>>>> Checking for orphans - Package Found - Building resources to delete")
+    #            package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if 'zip_child_of' in r and r['zip_child_of'] not in [x['id'] for x in remaining_resources]]
+    #            helpers.log.error("Found orphaned children: {0}".format(package_dict['resource_ids_to_delete']))
+    #            helpers.log.debug("Pkg_dict: {0}".format(package_dict))
+    #            if package_dict['resource_ids_to_delete']:
+    #                toolkit.get_action('zipextractor_delete_orphaned_resources')(context, package_dict)
 
     #def after_delete(self, context, remaining_resources):
     #    if remaining_resources:
