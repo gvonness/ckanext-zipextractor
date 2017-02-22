@@ -292,6 +292,7 @@ def delete_orphaned_resources(context, pkg_dict):
 
     #is_initial_call = not toolkit.asbool(pkg_dict.get('recursion_dict', 'False'))
     tested_ids = set(pkg_dict['resource_ids_to_delete']) | set(pkg_dict.get('ids_already_tested', []))
+    pkg_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in pkg_dict['resources_ids_to_delete']]
     for res_id in pkg_dict['resource_ids_to_delete']:
         for res in pkg_dict['resources']:
             if res.get('zip_child_of', '') == res_id and res['id'] not in deleted_ids:
@@ -306,10 +307,17 @@ def delete_orphaned_resources(context, pkg_dict):
                     new_deleted_ids, new_tested_ids = delete_orphaned_resources(context, new_dict)
                     deleted_ids |= new_deleted_ids
                     tested_ids |= tested_ids
-                log.error(">>> Deleting {0}".format(res['name']))
-                del_dict = dict(state='deleted')
-                session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
-                deleted_ids.add(res['id'])
+                else:
+                    log.error(">>> Deleting {0}".format(res['name']))
+                    del_dict = dict(state='deleted')
+                    session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
+                    deleted_ids.add(res['id'])
+                    tested_ids.add(res['id'])
+        log.error(">>> Deleting {0}".format(res['name']))
+        del_dict = dict(state='deleted')
+        session.query(model.Resource).filter_by(id=res['id']).update(del_dict)
+        deleted_ids.add(res_id)
+        tested_ids.add(res_id)
 
     #if is_initial_call:
     #    for res_id in pkg_dict['resource_ids_to_delete']:
