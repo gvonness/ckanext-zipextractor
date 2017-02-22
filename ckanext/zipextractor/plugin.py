@@ -57,7 +57,7 @@ class ZipExtractorPlugin(plugins.SingletonPlugin):
             package_dict = model.Package.get(remaining_resources[0]['package_id']).as_dict()
             if package_dict['state'] != 'deleted':
                 helpers.log.debug(">>>>>>> Checking for orphans - Package Found - Building resources to delete")
-                package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if 'spatial_child_of' in r and r['spatial_child_of'] not in [x['id'] for x in remaining_resources]]
+                package_dict['resource_ids_to_delete'] = [r['id'] for r in remaining_resources if 'zip_child_of' in r and r['zip_child_of'] not in [x['id'] for x in remaining_resources]]
                 helpers.log.debug("Found orphaned children: {0}".format(package_dict['resource_ids_to_delete']))
                 helpers.log.debug("Pkg_dict: {0}".format(package_dict))
                 if package_dict['resource_ids_to_delete']:
