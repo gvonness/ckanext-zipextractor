@@ -290,6 +290,7 @@ def delete_orphaned_resources(context, pkg_dict):
     session = model.Session
     deleted_ids = set()
 
+    is_initial = toolkit.asbool(pkg_dict.get('is_initial', True))
     tested_ids = set(pkg_dict.get('ids_already_tested', []))
     pkg_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in pkg_dict['resource_ids_to_delete']]
     for res_id in pkg_dict['resource_ids_to_delete']:
@@ -300,7 +301,7 @@ def delete_orphaned_resources(context, pkg_dict):
                     new_dict['resource_ids_to_delete'] = [res['id']]
                     new_dict['ids_already_tested'] = list(tested_ids)
                     new_dict['resources'] = [r for r in pkg_dict['resources'] if r['id'] not in deleted_ids]
-
+                    new_dict['is_initial'] = False
                     new_deleted_ids, new_tested_ids = delete_orphaned_resources(context, new_dict)
                     deleted_ids |= new_deleted_ids
                     tested_ids |= tested_ids
@@ -315,5 +316,8 @@ def delete_orphaned_resources(context, pkg_dict):
         session.query(model.Resource).filter_by(id=res_id).update(del_dict)
         deleted_ids.add(res_id)
         tested_ids.add(res_id)
+
+    if is_initial:
+        search.rebuild(pkg_dict['id'])
 
     return deleted_ids, tested_ids
